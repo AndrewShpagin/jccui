@@ -1,4 +1,4 @@
-# jcc : js <=> c++ interface
+# jcc:  js <=> c++ interface
 The base project for the interaction between the c++ code and browser. Completely cross-platform UI for c++ program in browser!
 
 This project is very simple and easy to understand c++ <=> javascript interface via the localhost and http. The idea is to make c++ applications that will display the UI using the html/javascript. 
@@ -9,7 +9,7 @@ Look the examples in the **jcc_test.cpp**
 It includes 3 headers - 
 * httplib.h - responsible for the server code. Look https://github.com/yhirose/cpp-httplib for details.
 * json.h - very lightweight json/javascript - style object manipulation. Look https://github.com/nbsdx/SimpleJSON for details.
-* jccServer.h - the interface layer that allows to open page in brobser and interact with the c++ code.
+* jcc.h - the interface layer that allows to open page in brobser and interact with the c++ code.
 
 It also hes several samples, uncomment, run and disover each one.
 How to start:
