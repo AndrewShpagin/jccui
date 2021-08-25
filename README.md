@@ -17,5 +17,5 @@ How to start:
 **Windows:**
 Open VS 2019, Open local folder, run the project
 
-**Mac/Linus:**
+**Mac/Linux:**
 Use CMake to build and run.
