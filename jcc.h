@@ -322,7 +322,7 @@ namespace jcc {
 	inline void LocalServer::open(const Html& page) {
 		home = page;
 		std::string lib;
-		FileSystem::read("public/main.js", lib);
+		FileSystem::read("main.js", lib);
 		if (strstr(home, "<body>")) {
 			std::string blib = "<body>\n<script>\n" + lib + "\n</script>";
 			home.Replace("<body>", blib.c_str());

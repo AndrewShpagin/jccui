@@ -1,6 +1,6 @@
 ﻿#include "httplib.h"
 #include "json.h"
-#include "jccServer.h"
+#include "jcc.h"
 
 /// simplest example ever
 void example_HelloWorld() {
@@ -12,7 +12,7 @@ void example_HelloWorld() {
 /// we get pattern.html, replacing [[NAME]] on "Andrew" and opening the modified html
 void example_HtmlPattern() {
 	jcc::LocalServer sr;
-	jcc::Html h("pattern.html");
+	jcc::Html h("examples/pattern.html");
 	h.Replace("[[NAME]]", "Andrew");
 	sr.open(h);
 	sr.listen();
@@ -26,7 +26,7 @@ void example_ObjectsExchange() {
 		js["User"] = obj;
 		return js;
 	});
-	jcc::Html h("test_request.html");
+	jcc::Html h("examples/test_request.html");
 	sr.open(h);
 	sr.listen();
 }
