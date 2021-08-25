@@ -277,6 +277,16 @@ namespace jcc {
 			});
 		std::string fpath = FileSystem::_public("");
 		svr->set_mount_point("/", fpath);
+		svr->Get("/submit", [=](const httplib::Request& req, httplib::Response& res) {
+			if (_exchange) {
+				json::JSON js;
+				for (auto it = req.params.begin(); it != req.params.end(); it++) {
+					js[it->first] = it->second;
+				}
+				json::JSON r = _exchange(js);
+				res.set_content(r.dump(), "application/json");
+			}
+			});
 		svr->Get("(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
 			if (_get) {
 				res.set_content(_get(req), "text/html");

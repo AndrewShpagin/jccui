@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.13.0/css/all.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    input[type=text],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    label {
+      padding: 12px 12px 12px 0;
+      display: inline-block;
+    }
+    a {
+      color: #4CAF50;
+    }
+
+    input[type=submit] {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    }
+
+    input[type=submit]:hover {
+      background-color: #45a049;
+    }
+
+    .container {
+      border-radius: 5px;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+
+    .col-25 {
+      float: left;
+      width: 25%;
+      margin-top: 6px;
+    }
+
+    .col-75 {
+      float: left;
+      width: 75%;
+      margin-top: 6px;
+    }
+    img { height: 1.12em; }
+    /* Clear floats after the columns */
+    .row:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+    @media screen and (max-width: 600px) {
+
+      .col-25,
+      .col-75,
+      input[type=submit] {
+        width: 100%;
+        margin-top: 0;
+      }
+    }
+  </style>
+  <script>
+    function paste(id) {
+       console.log(id);
+       var pasteText = document.getElementById(id);
+       pasteText.focus();
+       console.log(pasteText.textContent);
+       navigator.clipboard.readText().then(text => pasteText.textContent = text);
+    }
+    let render = (relEl, tpl) => {
+      if (!relEl) return;
+      const range = document.createRange();
+      range.selectNode(relEl);
+      const child = range.createContextualFragment(tpl);
+      return relEl.appendChild(child);
+    }
+    function insert(html) {
+      render(document.getElementById('content'), html);
+    }
+    function addTextLine(id, text_id, text, height, extra, eng) {
+      let html =
+        `<div class="row">
+          <div class="col-25">
+            <label for="${id}">${text_id}</label>
+          </div>
+          <div class="col-75">
+            <div><textarea id="${id}_VALUE" name="${id}" style="height: ${height * 20}px;" onclick="autotranslate(\`${encodeURIComponent(eng)}\`)" ${extra ? extra : ''}>${text}</textarea>
+          </div>
+        </div>`;
+      insert(html);
+    }
+    let allowBing = false;
+    function autotranslate(text){
+      if(allowBing) {
+        document.getElementById("bing").innerHTML = `<iframe id="Frame" src="https://www.bing.com/translator?to=${lcode}&text=${text}" width="100%" height="1000pt"></iframe>`;
+      }
+    }
+    function assignText(id,text){
+      console.log(text);
+      console.log(decodeURIComponent(text));
+      document.getElementById(`${id}_VALUE`).value = decodeURIComponent(text);
+    }
+    let order = 0;
+    function addTranslateHint(id, text, trtext, link) {
+      if(text.length) {
+        let html =
+          `<div class="row">
+            <div class="col-25">
+              <label></label>
+            </div>
+            <div class="col-75">
+              <div style="color: grey;font-size: 85%;">
+                <a href="javascript:assignText('${id}', \`${encodeURIComponent(text)}\`)">English:</a> ${text}&nbsp;<a href="javascript:assignText('${id}', \`${encodeURIComponent(trtext)}\`)">restore original</a><br>
+                <a href="https://translate.google.com?sl=en&text=${encodeURIComponent(text)}&op=translate&tl=${lcode}"><i class="fab fa-google"></i><b>oogle</b></a>
+                &nbsp;&nbsp;&nbsp;
+                <a href="https://www.deepl.com/en/translator#en/${lcode}/${encodeURIComponent(text)}"><img src="https://www.deepl.com/img/logo/DeepL_Logo_darkBlue_v2.svg"></img><b>DeepL</b></a>
+                &nbsp;&nbsp;&nbsp;
+                <a href="https://www.bing.com/translator?to=${lcode}&text=${encodeURIComponent(text)}"><img src="https://upload.wikimedia.org/wikipedia/en/thumb/b/b7/Microsoft_Translator_Logo.png/195px-Microsoft_Translator_Logo.png"></img><b>Bing</b></a>
+                &nbsp;&nbsp;&nbsp;
+                <a href="javascript:paste('${id}_VALUE');"><i class="fas fa-paste"></i><b>Paste</b></a></div>
+            </div>
+          </div>`;
+        insert(html);
+      }
+    }
+    function addButton(name) {
+      let html =
+        `<input type="submit" name="action" value="${name}" onclick="setTimeout(()=> window.close(), 500)">`;
+      render(document.getElementById('buttons'), html);
+    }
+    function addDescription(name) {
+      let html = `<div style="color: grey;font-size: 85%;">${name}</div>`;
+      render(document.getElementById('buttons'), html);
+    }
+  </script>
+</head>
+
+<body>
+  <div class="bg">
+    <div class="container">
+      <form action="/submit" method="get">
+        <div id="content"></div>
+        <div class="row" id="buttons"></div>
+      </form>
+    </div>
+    <div id="bing"></div>
+  </div>
+  <script>
+    const text = {JSONTEXT};
+    let lcode='ru';
+    let nb = 0;
+    let lang='English';
+    for(const [k, v] of Object.entries(text)) {
+      if(k=='Language'){
+        addTextLine('Language', 'Language', v, 2, 'readonly');
+        lang=v;
+      }
+      if(k=='mail')addTextLine('EMAIL', 'e-mail', v, 2);
+      if(k=='author')addTextLine('AUTHOR', 'Your name', v, 2);
+      if(k.includes('Button')) {
+        addButton(v);
+        nb++;
+      }
+      if(k.includes('TextItem')){
+        console.log(v);
+        lcode = v.tl;
+        addTextLine('HINT:' + v.ID, v.ID, v.Text, v.Text.length/140 + 2, 0, lang !== 'English' ? v.English : '');
+        if(lang !== 'English'){
+          addTranslateHint('HINT:' + v.ID, v.English, v.Text, v.link);
+          allowBing = true;
+        }
+      }
+    }
+  </script>
+  <script></script>
+</body>                  
