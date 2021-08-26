@@ -1,4 +1,4 @@
-# jcc:  js <=> c++ interface
+# JCCUI:  js <=> c++ interface
 The base project for the interaction between the c++ code and browser. Completely cross-platform UI for c++ program in browser!
 
 This project is very simple and easy to understand c++ <=> javascript interface via the localhost and http. The idea is to make c++ applications that will display the UI using the html/javascript. 
