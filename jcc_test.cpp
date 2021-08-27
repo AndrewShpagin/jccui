@@ -21,7 +21,7 @@ void example_HtmlPattern() {
 /// we get test_request.html, it sends request using sendObject (defined in main.js), we are modifying object and returning the resulting js object.
 void example_ObjectsExchange() {
 	jcc::LocalServer sr;
-	sr.exchange([](json::JSON& obj)->json::JSON {
+	sr.exchange([](const json::JSON& obj)->json::JSON {
 		json::JSON js;
 		js["User"] = obj;
 		return js;
@@ -32,7 +32,7 @@ void example_ObjectsExchange() {
 }
 
 /// The first real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
-/// In this case the form helps to translate on Japanese language
+/// In this case the form helps to translate on Japanese language. The example opens page, waits for "Submit", then closes the page.
 void example_Translate() {
 	jcc::LocalServer sr;
 	json::JSON txt=json::Object();
@@ -59,10 +59,10 @@ void example_Translate() {
 	jcc::Html h("examples/edittext.html");
 	h.Replace("{JSONTEXT}", txt.dump().c_str());
 	///pay attention, if the form has action <form action="/submit" method="get"> then the result of submitting will be passed there as json object, look the edittext.html
-	sr.exchange([](json::JSON& data)->json::JSON {
-		printf("%s", data.dump().c_str());
-		return data;
-		});
+	sr.get([](const jcc::Request& req, jcc::Response& res) {
+		printf("The translation result:\n%s", req.paramsToJson().dump().c_str());
+		res = "<html><body><div>Text accepted! Please close the page if it is not closed automatically.</div><script>window.close();</script></body></html>";
+		}, "/submit");
 	sr.open(h);
 	sr.listen();
 }

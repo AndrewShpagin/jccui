@@ -7,6 +7,30 @@ namespace httplib {
 };
 
 namespace jcc {
+	class Html;
+
+	class Request:public httplib::Request {
+	public:
+		///tries to convert params to json, if empty -  converts body to JSON
+		operator json::JSON() const;
+		///explicitly converts params of the request to JSON
+		json::JSON paramsToJson() const;
+		///explicitly converts the body of the request to JSON
+		json::JSON bodyToJson() const;
+	};
+	class Response:public httplib::Response {
+	public:
+		///Assign the json directly as the request response
+		void operator = (const json::JSON& js);
+		///Assign the HTML as the request response;
+		void operator = (const Html& h);
+		///Assign text as the response result
+		void operator = (const std::string& string);
+		///Assign text as the response result
+		void operator = (const char* string);
+	};
+	typedef std::function<void(Request, Response)> requestHandler;
+	
 	///This is the simplified filesystem class to be used by the server
 	class FileSystem {
 		static std::string& _server();
@@ -43,7 +67,6 @@ namespace jcc {
 
 	class LocalServer {
 		httplib::Server* svr;
-		std::function<std::string(const httplib::Request&)> _get;
 		std::function<json::JSON(json::JSON&)> _exchange;
 		int _port;
 		Html home;
@@ -65,13 +88,19 @@ namespace jcc {
 		/// opens the page from file in browser
 		void openFile(const char* filepath);
 
-		/// assign the callback for the get request. The page interacts with the host program via the get requests.
-		void get(std::function<std::string(const httplib::Request&)> f);
+		/// assign the callback for the get request. The page may interact with the host program via the get requests.
+		void get(requestHandler f, const char* pattern = nullptr);
 
-		///exchange objects, you are getting object as input and should return the object as well
-		void exchange(std::function<json::JSON(json::JSON&)> f);
+		/// assign the callback for the post request. The page may interact with the host program via the post requests.
+		void post(requestHandler f, const char* pattern = nullptr);
 
-		/// run once, it blocks execution and starts to listen the requests.
+		/// assign the callback for the put request.
+		void put(requestHandler f, const char* pattern = nullptr);
+
+		///exchange objects, you are getting object as input and should return the object as well. The call of exchange initiated on browser's side by sendObject, see the example
+		void exchange(std::function<json::JSON(const json::JSON&)> f);
+
+		/// run once, it blocks execution and starts to listen the requests. Create the thread if no need blocking.
 		void listen();
 	};
 
@@ -148,6 +177,43 @@ namespace jcc {
 			if (L && s[L - 1] != '\\' && s[L - 1] != '/')s.pop_back();
 			else break;
 		} while (s.length());
+	}
+
+	inline Request::operator json::JSON() const {
+		if (params.size()) {
+			return paramsToJson();
+		}else {
+			return bodyToJson();
+		}
+	}
+
+	inline json::JSON Request::paramsToJson() const {
+		json::JSON js;
+		for (auto it = params.begin(); it != params.end(); it++) {
+			js[it->first] = it->second;
+		}
+		return js;
+	}
+
+	inline json::JSON Request::bodyToJson() const {
+		json::JSON js = json::JSON::Load(body.c_str());
+		return js;
+	}
+
+	inline void Response::operator=(const json::JSON& js) {
+		set_content(js.dump(), "application/json");
+	}
+
+	inline void Response::operator=(const Html& h) {
+		set_content(h.body.c_str(), "text/html");
+	}
+
+	inline void Response::operator=(const std::string& str) {
+		set_content(str.c_str(), "text/html");
+	}
+
+	inline void Response::operator=(const char* str) {
+		set_content(str, "text/html");
 	}
 
 	inline std::string& FileSystem::_server() {
@@ -262,8 +328,6 @@ namespace jcc {
 		_allowConsoleOutput = false;
 		_autoTerminate = true;
 		svr = new httplib::Server;
-		_get = nullptr;
-		_exchange = nullptr;
 		if (!svr->is_valid()) {
 			printf("server has an error...\n");
 			return;
@@ -277,29 +341,6 @@ namespace jcc {
 			});
 		std::string fpath = FileSystem::_public("");
 		svr->set_mount_point("/", fpath);
-		svr->Get("/submit", [=](const httplib::Request& req, httplib::Response& res) {
-			if (_exchange) {
-				json::JSON js;
-				for (auto it = req.params.begin(); it != req.params.end(); it++) {
-					js[it->first] = it->second;
-				}
-				json::JSON r = _exchange(js);
-				res.set_content(r.dump(), "application/json");
-			}
-			});
-		svr->Get("(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
-			if (_get) {
-				res.set_content(_get(req), "text/html");
-			}
-			});
-		svr->Post("/exchange", [=](const httplib::Request& req, httplib::Response& res) {
-			if (_exchange) {
-				json::JSON js = json::JSON::Load(req.body);
-				std::string s1 = js.dump();
-				json::JSON r = _exchange(js);
-				res.set_content(r.dump(), "application/json");
-			}
-			});
 		svr->set_error_handler([](const httplib::Request& req, httplib::Response& res) {
 			const char* fmt = "<p>Error Status: <span style='color:red;'>%d</span></p>";
 			char buf[BUFSIZ];
@@ -347,12 +388,41 @@ namespace jcc {
 		open(p);
 	}
 
-	inline void LocalServer::get(std::function<std::string(const httplib::Request&)> f) {
-		_get = f;
+	inline void LocalServer::get(requestHandler f, const char* pattern) {
+		if(svr)svr->Get(pattern ? pattern : "(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
+			const Request* _req = static_cast<const Request*>(&req);
+			Response* _res = static_cast<Response*>(&res);
+			f(*_req, *_res);
+			res.status = 200;
+		});
 	}
 
-	void LocalServer::exchange(std::function<json::JSON(json::JSON&)> f) {
-		_exchange = f;
+	inline void LocalServer::post(requestHandler f, const char* pattern) {
+		if (svr)svr->Post(pattern ? pattern : "(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
+			const Request* _req = static_cast<const Request*>(&req);
+			Response* _res = static_cast<Response*>(&res);
+			f(*_req, *_res);
+			res.status = 200;
+		});
+	}
+
+	inline void LocalServer::put(requestHandler f, const char* pattern) {
+		if (svr)svr->Put(pattern ? pattern : "(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
+			const Request* _req = static_cast<const Request*>(&req);
+			Response* _res = static_cast<Response*>(&res);
+			f(*_req, *_res);
+			res.status = 200;
+			});
+	}
+
+	void LocalServer::exchange(std::function<json::JSON(const json::JSON&)> f) {
+		if (svr)svr->Post("/exchange", [=](const httplib::Request& req, httplib::Response& res) {
+			json::JSON js = json::JSON::Load(req.body);
+			std::string s1 = js.dump();
+			json::JSON r = f(js);
+			res.set_content(r.dump(), "application/json");
+			res.status = 200;
+		});
 	}
 
 	inline void LocalServer::listen() {

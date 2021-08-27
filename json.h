@@ -262,7 +262,7 @@ namespace json {
 
         int length() const {
             if (Type == Class::Array)
-                return Internal.List->size();
+                return (int)Internal.List->size();
             else
                 return -1;
         }
@@ -275,9 +275,9 @@ namespace json {
 
         int size() const {
             if (Type == Class::Object)
-                return Internal.Map->size();
+                return (int)Internal.Map->size();
             else if (Type == Class::Array)
-                return Internal.List->size();
+                return (int)Internal.List->size();
             else
                 return -1;
         }
