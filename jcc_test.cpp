@@ -59,9 +59,10 @@ void example_Translate() {
 	jcc::Html h("examples/edittext.html");
 	h.Replace("{JSONTEXT}", txt.dump().c_str());
 	///pay attention, if the form has action <form action="/submit" method="get"> then the result of submitting will be passed there as json object, look the edittext.html
-	sr.get([](const jcc::Request& req, jcc::Response& res) {
+	sr.get([&](const jcc::Request& req, jcc::Response& res) {
 		printf("The translation result:\n%s", req.paramsToJson().dump().c_str());
 		res = "<html><body><div>Text accepted! Please close the page if it is not closed automatically.</div><script>window.close();</script></body></html>";
+		sr.signalToStop();
 		}, "/submit");
 	sr.open(h);
 	sr.listen();

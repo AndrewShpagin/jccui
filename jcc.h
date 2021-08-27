@@ -29,7 +29,7 @@ namespace jcc {
 		///Assign text as the response result
 		void operator = (const char* string);
 	};
-	typedef std::function<void(Request, Response)> requestHandler;
+	typedef std::function<void(const Request&, Response&)> requestHandler;
 	
 	///This is the simplified filesystem class to be used by the server
 	class FileSystem {
@@ -72,6 +72,7 @@ namespace jcc {
 		Html home;
 		bool _allowConsoleOutput;
 		bool _autoTerminate;
+		bool _stop;
 		std::string dump_headers(const httplib::Headers& headers);
 		std::string log(const httplib::Request& req, const httplib::Response& res);
 	public:
@@ -102,6 +103,9 @@ namespace jcc {
 
 		/// run once, it blocks execution and starts to listen the requests. Create the thread if no need blocking.
 		void listen();
+
+		/// stop the server and exit the listen cycle. This function may be called in the response body. Server will be stopped only after the sending the response.
+		void signalToStop();
 	};
 
 
@@ -268,28 +272,21 @@ namespace jcc {
 
 	inline void FileSystem::read(const char* filename, std::string& to) {
 		std::string fp = _server() + filename;
-		FILE* F = nullptr;
-		fopen_s(&F, fp.c_str(), "rb");
-		if (F) {
-			fseek(F, 0, SEEK_END);
-			size_t p = ftell(F);
-			fseek(F, 0, SEEK_SET);
-			char* cc = new char[p + 1];
-			cc[p] = 0;
-			fread(cc, 1, p, F);
-			fclose(F);
-			to = cc;
-			delete[]cc;
+		std::ifstream  fs(fp, std::fstream::in | std::fstream::binary);
+		if (fs.is_open()) {
+			std::stringstream buffer;
+			buffer << fs.rdbuf();
+			to = buffer.str();
+			fs.close();
 		}
 	}
 
 	inline void FileSystem::write(const char* filename, std::string& from) {
 		std::string fp = _server() + filename;
-		FILE* F = nullptr;
-		fopen_s(&F, fp.c_str(), "wb");
-		if (F) {
-			fwrite(from.c_str(), 1, from.length(), F);
-			fclose(F);
+		std::fstream fs(fp, std::fstream::out | std::fstream::binary);
+		if(fs.is_open()){
+			fs << from;
+			fs.close();
 		}
 	}
 
@@ -327,6 +324,7 @@ namespace jcc {
 	inline LocalServer::LocalServer(int preferred_port) {
 		_allowConsoleOutput = false;
 		_autoTerminate = true;
+		_stop = false;
 		svr = new httplib::Server;
 		if (!svr->is_valid()) {
 			printf("server has an error...\n");
@@ -352,6 +350,11 @@ namespace jcc {
 			});
 		svr->set_file_request_handler([this](const httplib::Request& req, httplib::Response& res) {
 			printf("File request: %s", log(req, res).c_str());
+			});
+		svr->set_post_routing_handler([this](const httplib::Request& req, httplib::Response& res) {
+			if(_stop) {
+				svr->stop();
+			}
 			});
 		_port = preferred_port;
 		if (preferred_port == -1)_port = svr->bind_to_any_port("localhost");
@@ -426,6 +429,12 @@ namespace jcc {
 	}
 
 	inline void LocalServer::listen() {
-		svr->listen_after_bind();
+		if(svr)svr->listen_after_bind();
+	}
+
+	inline void LocalServer::signalToStop() {
+		if(svr) {
+			_stop = true;
+		}
 	}
 };
