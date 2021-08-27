@@ -34,7 +34,8 @@ jcc::LocalServer sr;
 sr.open("Hello world!");
 sr.listen();
 ```
-2. Opening custom page.  We get pattern.html, replacing "[[NAME]]" on "Andrew" and opening the modified html
+2. Opening custom page.  We get pattern.html, replacing "[[NAME]]" on "Andrew" and opening the modified html.
+See the [pattern.html](examples/pattern.html)
 ```cpp
 jcc::LocalServer sr;
 jcc::Html h("examples/pattern.html");
@@ -44,6 +45,7 @@ sr.listen();
 ```
 3. The real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
 In this case the form helps to translate on Japanese language. The example opens page, waits for "Submit", then closes the page.
+See the [edittext.html](examples/edittext.html)
 ```cpp
 jcc::LocalServer sr;
 json::JSON txt=json::Object();
