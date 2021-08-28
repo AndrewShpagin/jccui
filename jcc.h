@@ -31,21 +31,20 @@ namespace jcc {
 	};
 	typedef std::function<void(const Request&, Response&)> requestHandler;
 	
-	///This is the simplified filesystem class to be used by the server
+	/// This is the simplified filesystem class to be used by the server
+	/// There are two types of paths that may be passed to the functions:
+	/// 1. Absolute. It starts as / or x:
+	/// 2. Relative to the folder that contains main.js
 	class FileSystem {
 		static std::string& _server();
-
 		static void _define_server();
 	public:
-		///returns path to the system folder to store app-specific files. You need to create subfolder to that path.
-		static const char* getTempFolder();
-		///appends filename to the /public and returns the path.
-		/// The public path defined by setServerFilesPlacement()  + "/public" or seek automatically.
-		/// Pay attention, existance of /public folder is mandatory even if there are no files!
-		static std::string _public(const char* filename);
 		/// appends filename to the server files path
 		static std::string path(const char* filename);
-		/// Set the path to the folder that contains /public and /private folders 
+		/// Set the path to the folder that contains /public folder
+		/// The main.js should be placed into the root of that folder.
+		/// If you will mot specify the path, the folder that contains main.js will be taken as the root folder
+		/// will be treated as the root folder for the server.
 		static void setServerFilesPlacement(const char* path);
 		/// read the file to string
 		static void read(const char* filename, std::string& to);
@@ -53,16 +52,21 @@ namespace jcc {
 		static void write(const char* filename, std::string& from);
 		/// create all componentes of the path
 		static void createPath(const char* path);
+		/// detects if the path is relative
+		static bool pathIsRelative(const char* path);
 	};
 
 	class Html {
 	public:
-		std::string body;
+		std::string _body;
 		Html();
 		Html(const char* filepath);
 		operator const char* ();
 		operator std::string& ();
 		void Replace(const char* ID, const char* text);
+
+		/// making html using the chain operators
+		Html& tag(const char* tagName, const char* attributes, const Html& inner);
 	};
 
 	class LocalServer {
@@ -209,7 +213,7 @@ namespace jcc {
 	}
 
 	inline void Response::operator=(const Html& h) {
-		set_content(h.body.c_str(), "text/html");
+		set_content(h._body.c_str(), "text/html");
 	}
 
 	inline void Response::operator=(const std::string& str) {
@@ -232,7 +236,7 @@ namespace jcc {
 			do {
 				std::string fp = _server();
 				EnsureTrailingSlash(fp);
-				fp += "/public";
+				fp += "/main.js";
 				if (std::filesystem::exists(std::filesystem::path(fp.c_str()))) {
 					break;
 				}
@@ -245,24 +249,14 @@ namespace jcc {
 		}
 	}
 
-	inline const char* FileSystem::getTempFolder() {
-		return "temp/";
-	}
-
-
-	inline std::string FileSystem::_public(const char* filename) {
-		_define_server();
-		std::string pub = _server();
-		pub += "public/";
-		pub += filename;
-		return pub;
-	}
-
 	inline std::string FileSystem::path(const char* filename) {
 		_define_server();
-		std::string fp = _server();
-		fp += filename;
-		return fp;
+		if (pathIsRelative(filename)) {
+			std::string fp = _server();
+			fp += filename;
+			return fp;
+		}
+		else return std::string(filename);
 	}
 
 	inline void FileSystem::setServerFilesPlacement(const char* path) {
@@ -271,6 +265,7 @@ namespace jcc {
 	}
 
 	inline void FileSystem::read(const char* filename, std::string& to) {
+		_define_server();
 		std::string fp = _server() + filename;
 		std::ifstream  fs(fp, std::fstream::in | std::fstream::binary);
 		if (fs.is_open()) {
@@ -282,6 +277,7 @@ namespace jcc {
 	}
 
 	inline void FileSystem::write(const char* filename, std::string& from) {
+		_define_server();
 		std::string fp = _server() + filename;
 		std::fstream fs(fp, std::fstream::out | std::fstream::binary);
 		if(fs.is_open()){
@@ -291,7 +287,16 @@ namespace jcc {
 	}
 
 	inline void FileSystem::createPath(const char* path) {
+		_define_server();
+		std::filesystem::create_directories(path);
+	}
 
+	inline bool FileSystem::pathIsRelative(const char* path) {
+		if (path && path[0]) {
+			if (path[0] == '/')return false;
+			if (strlen(path) > 1 && path[1] == ':')return false;
+		}
+		return true;
 	}
 
 	inline Html::Html() {
@@ -299,15 +304,15 @@ namespace jcc {
 	}
 
 	inline Html::Html(const char* filepath) {
-		jcc::FileSystem::read(filepath, body);
+		jcc::FileSystem::read(filepath, _body);
 	}
 
 	inline Html::operator const char* () {
-		return body.c_str();
+		return _body.c_str();
 	}
 
 	inline Html::operator std::string& () {
-		return body;
+		return _body;
 	}
 
 	std::string _replace(std::string& str, const std::string& sub, const std::string& mod) {
@@ -318,7 +323,12 @@ namespace jcc {
 	}
 	
 	inline void Html::Replace(const char* ID, const char* text) {
-		body = _replace(body, ID, text);
+		_body = _replace(_body, ID, text);
+	}
+
+	inline Html& Html::tag(const char* tagName, const char* attributes, const Html& inner) {
+		_body += "<" + std::string(tagName) + (attributes && attributes[0] ? " " + std::string(attributes) : "") + ">" + inner._body + "</" + tagName + ">";
+		return *this;
 	}
 
 	inline LocalServer::LocalServer(int preferred_port) {
@@ -337,7 +347,7 @@ namespace jcc {
 			std::string h = home;
 			res.set_content(h, "text/html");
 			});
-		std::string fpath = FileSystem::_public("");
+		std::string fpath = FileSystem::path("public");
 		svr->set_mount_point("/", fpath);
 		svr->set_error_handler([](const httplib::Request& req, httplib::Response& res) {
 			const char* fmt = "<p>Error Status: <span style='color:red;'>%d</span></p>";
