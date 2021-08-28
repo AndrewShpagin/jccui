@@ -403,27 +403,27 @@ namespace jcc {
 
 	inline void LocalServer::get(requestHandler f, const char* pattern) {
 		if(svr)svr->Get(pattern ? pattern : "(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
-			const Request* _req = static_cast<const Request*>(&req);
-			Response* _res = static_cast<Response*>(&res);
-			f(*_req, *_res);
+			const Request* _request = static_cast<const Request*>(&req);
+			Response* _result = static_cast<Response*>(&res);
+			f(*_request, *_result);
 			res.status = 200;
 		});
 	}
 
 	inline void LocalServer::post(requestHandler f, const char* pattern) {
 		if (svr)svr->Post(pattern ? pattern : "(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
-			const Request* _req = static_cast<const Request*>(&req);
-			Response* _res = static_cast<Response*>(&res);
-			f(*_req, *_res);
+			const Request* _request = static_cast<const Request*>(&req);
+			Response* _result = static_cast<Response*>(&res);
+			f(*_request, *_result);
 			res.status = 200;
 		});
 	}
 
 	inline void LocalServer::put(requestHandler f, const char* pattern) {
 		if (svr)svr->Put(pattern ? pattern : "(.*?)", [=](const httplib::Request& req, httplib::Response& res) {
-			const Request* _req = static_cast<const Request*>(&req);
-			Response* _res = static_cast<Response*>(&res);
-			f(*_req, *_res);
+			const Request* _request = static_cast<const Request*>(&req);
+			Response* _result = static_cast<Response*>(&res);
+			f(*_request, *_result);
 			res.status = 200;
 			});
 	}
