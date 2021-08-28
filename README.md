@@ -51,9 +51,6 @@ jcc::LocalServer sr;
 json::JSON txt=json::Object();
 const char* tl = "ja";
 int idx = 0;
-auto tag = [&](const char* id, const char* value) {
-	txt[id] = value;
-};
 auto add = [&](const char* id, const char* text) {
 	std::string s = "TextItem" + std::to_string(idx++);
 	txt[s] = json::Object();
