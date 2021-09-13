@@ -165,3 +165,16 @@ sr.get([&](const jcc::Request& req, jcc::Response& res) {
 sr.open(h);
 sr.wait();
 ```
+## Real projects based on **JCCUI**
+
+Translation helper:<br>
+https://github.com/AndrewShpagin/idTranslate
+
+Auto-updater with UI in browser for any software:<br>
+https://github.com/AndrewShpagin/AutoUpdater
+
+
+3D-Coat, the popular 3D modelin/painting tool:<br>
+https://pilgway.com<br>
+
+**JCCUI** used in 3D-Coat as translation helper, for **Updates manager**.
