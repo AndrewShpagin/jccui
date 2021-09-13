@@ -114,7 +114,8 @@ sr.wait();
 See the [pattern.html](examples/pattern.html)
 ```cpp
 jcc::LocalServer sr;
-jcc::Html h("examples/pattern.html");
+// if you read by relative path, you need to pass server reference as well
+jcc::Html h("examples/pattern.html", sr);
 h.Replace("[[NAME]]", "Andrew");
 sr.open(h);
 sr.wait();
@@ -154,7 +155,7 @@ txt["author"] = "Andrew";
 add("HELLO", "Hello world!");
 add("JCC", "js and c++ interface.");
 txt["Button"] = "Submit";
-jcc::Html h("examples/edittext.html");
+jcc::Html h("examples/edittext.html", sr);
 h.Replace("{JSONTEXT}", txt.dump().c_str());
 ///pay attention, if the form has action <form action="/submit" method="get"> then the result of submitting will be passed there as json object, look the edittext.html
 sr.get([&](const jcc::Request& req, jcc::Response& res) {
