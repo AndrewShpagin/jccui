@@ -49,7 +49,8 @@ jcc::LocalSelver ls;
 jcc::Html h("test.html");//test.html placed in the same folder as the main.js
 ls.exchange([](const json::JSON& incomingData)->json::JSON {
 	json::JSON response;
-	// handle the incoming data and send the response.
+	// handle the incoming data and send the response. It looks similar to js syntax
+	response["User"] = "Andrew";	
 	return response;
 });
 ls.open(h);
