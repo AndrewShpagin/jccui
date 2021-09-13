@@ -55,8 +55,10 @@ ls.exchange([](const json::JSON& incomingData)->json::JSON {
 ls.open(h);
 do {
 	// do something in cycle if need, 
-	// send data to client if need
+	// send data to client if need, for example
+	ls.eval() << "console.log('Hello from the c++ code!')" << sr;
 	// and sleep if nothing todo.
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 } while(ls.alive());
 // End all stuff
 ls.finishGracefully();	
