@@ -33,10 +33,42 @@ Just include 3 headers into your project.
 1. Simplest "Hello, world!"
 ```cpp
 jcc::LocalServer sr;
-sr.open("Hello world!");
-sr.listen();
+jcc::Html h;
+h << "<body>Hello world!</body>";
+sr.open(h);
+sr.wait();
 ```
-2. Opening custom page.  We get pattern.html, replacing "[[NAME]]" on "Andrew" and opening the modified html.
+2. Open the page and execute js code there. The code passed later, after the page is open.
+```cpp
+jcc::LocalServer sr;
+jcc::Html h;
+h << "<body>Press CTRL SHIFT I, see the console.</body>";
+sr.open(h);
+sr.eval() << "console.log('Hello from the c++ code!')" << sr;
+sr.wait();
+```
+3. Modify DOM element from the c++ server side.
+```cpp
+jcc::LocalServer sr;
+jcc::Html h;
+h << "<body><h1 id=\"main\"><h1></body>";
+sr.open(h);
+for(int i=0;sr.alive();i++){
+	sr.el("main") << "Seconds passed: <b>" << std::to_string(i) << "</b>" << sr;
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}
+sr.stopGracefully();
+```
+4. Send something to the browser console.
+```cpp
+jcc::LocalServer sr;
+jcc::Html h;
+h << "<body>Press CTRL SHIFT I, see the console.</body>";
+sr.open(h);
+sr.console() << "Hello from the c++ code!'" << sr;
+sr.wait();
+```
+5. Opening custom page.  We get pattern.html, replacing "[[NAME]]" on "Andrew" and opening the modified html.
 See the [pattern.html](examples/pattern.html)
 ```cpp
 jcc::LocalServer sr;
@@ -45,7 +77,7 @@ h.Replace("[[NAME]]", "Andrew");
 sr.open(h);
 sr.listen();
 ```
-3. The real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
+6. The real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
 In this case the form helps to translate on Japanese language. The example opens page, waits for "Submit", then closes the page.
 See the [edittext.html](examples/edittext.html)
 ```cpp
