@@ -5,7 +5,7 @@ The base project for the interaction between the c++ code and browser. Completel
 
 This project is very simple and easy to understand c++ <=> javascript interface via the localhost and http. The idea is to make c++ applications that will display the UI using the html/javascript. 
 
-This library has no any external dependencies, consists only of headers, super-lightweight and easy to start. If you know html, js, c++, it is easy to mak c++ app that opens own UI in browser.
+This library has no any external dependencies, consists only of headers, super-lightweight and easy to start. If you know html, js, c++, it is easy to make c++ app that opens own UI in browser.
 
 Look the examples in the **jcc_test.cpp**
 It includes 3 headers - 
