@@ -77,7 +77,19 @@ h.Replace("[[NAME]]", "Andrew");
 sr.open(h);
 sr.wait();
 ```
-6. The real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
+6. Objects exchange, see the [test_request.html](examples/test_request.html)
+```cpp
+jcc::LocalServer sr;
+sr.exchange([](const json::JSON& obj)->json::JSON {
+	json::JSON js;
+	js["User"] = obj;
+	return js;
+});
+jcc::Html h("examples/test_request.html");
+sr.open(h);
+sr.wait();
+```
+7. The real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
 In this case the form helps to translate on Japanese language. The example opens page, waits for "Submit", then closes the page.
 See the [edittext.html](examples/edittext.html)
 ```cpp
