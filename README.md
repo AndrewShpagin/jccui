@@ -75,7 +75,7 @@ jcc::LocalServer sr;
 jcc::Html h("examples/pattern.html");
 h.Replace("[[NAME]]", "Andrew");
 sr.open(h);
-sr.listen();
+sr.wait();
 ```
 6. The real example. Let you have ID <=> String correspondence in your app. And you want to edit/translate the text in the browser.
 In this case the form helps to translate on Japanese language. The example opens page, waits for "Submit", then closes the page.
@@ -108,5 +108,5 @@ sr.get([&](const jcc::Request& req, jcc::Response& res) {
 	res = "<html><body><div>Text accepted! Please close the page if it is not closed automatically.</div><script>window.close();</script></body></html>";
 	}, "/submit");
 sr.open(h);
-sr.listen();
+sr.wait();
 ```
