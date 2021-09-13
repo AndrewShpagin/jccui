@@ -65,7 +65,7 @@ do {
 ls.finishGracefully();	
 ```
 Pay attention the project should include **'main.js'**, it should be placed in the project's folder. The folder where the **main.js** placed
-treated as the root folder. All publicly accessible resources like pictures should be places into the **public** folder. If you want to point 
+treated as the root folder. All publicly accessible resources like pictures should be placed into the **public** folder. If you want to point 
 to some specific folder whwre you placed **main.js**, ise the function
 ```cpp
 jcc::LocalSelver ls;
