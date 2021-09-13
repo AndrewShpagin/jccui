@@ -128,7 +128,7 @@ sr.exchange([](const json::JSON& obj)->json::JSON {
 	js["User"] = obj;
 	return js;
 });
-jcc::Html h("examples/test_request.html");
+jcc::Html h("examples/test_request.html", sr);
 sr.open(h);
 sr.wait();
 ```
