@@ -29,6 +29,38 @@ Just include 3 headers into your project.
 #include "json.h"
 #include "jcc.h"
 ```
+### Several patterns of usage:
+
+The simplest one:
+```cpp
+jcc::LocalSelver ls;
+jcc::Html h("test.html");//test.html placed in the same folder as the main.js
+ls.exchange([](const json::JSON& incomingData)->json::JSON {
+	json::JSON response;
+	// handle the incoming data and send the response.
+	return response;
+});
+ls.open(h);
+ls.wait();
+```
+A bit more general:
+```cpp
+jcc::LocalSelver ls;
+jcc::Html h("test.html");//test.html placed in the same folder as the main.js
+ls.exchange([](const json::JSON& incomingData)->json::JSON {
+	json::JSON response;
+	// handle the incoming data and send the response.
+	return response;
+});
+ls.open(h);
+do {
+	// do something in cycle if need, 
+	// send data to client if need
+	// and sleep if nothing todo.
+} while(ls.alive());
+// End all stuff
+ls.finishGracefully();	
+```
 ## Samples
 1. Simplest "Hello, world!"
 ```cpp
