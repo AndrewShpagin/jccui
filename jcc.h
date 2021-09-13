@@ -452,8 +452,8 @@ namespace jcc {
 					ins = false;
 				}
 			}
-		}
 #endif
+		}
 		return *keeper;
 	}
 
