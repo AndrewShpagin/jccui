@@ -10,7 +10,7 @@ This library has no any external dependencies, consists only of headers, super-l
 Look the examples in the **jcc_test.cpp**
 It includes 3 headers - 
 * httplib.h - responsible for the server code. Look https://github.com/yhirose/cpp-httplib for details.
-* json.h - very lightweight json/javascript - style object manipulation. Look https://github.com/nbsdx/SimpleJSON for details.
+* json.h - very lightweight json/javascript - style object manipulation. Look https://github.com/nbsdx/SimpleJSON for details. Pay attention, there used modified version of the SimpleJSON, several bugs fixed, better flexibility of types casting.
 * jcc.h - the interface layer that allows to open page in brobser and interact with the c++ code.
 
 It also has several samples, uncomment, run and disover each one.
