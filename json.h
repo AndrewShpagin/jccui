@@ -287,28 +287,43 @@ namespace json {
         /// Functions for getting primitives from the JSON object.
         bool IsNull() const { return Type == Class::Null; }
 
-        string ToString() const { bool b; return std::move(ToString(b)); }
+        bool operator == (const std::string& str) const { return *Internal.String == str; }
+
+        string ToString() const { bool b; return ToString(b); }
         string ToString(bool& ok) const {
             ok = (Type == Class::String);
-            return ok ? std::move(json_escape(*Internal.String)) : string("");
+            return ok ? *Internal.String : string("");
         }
 
         double ToFloat() const { bool b; return ToFloat(b); }
         double ToFloat(bool& ok) const {
             ok = (Type == Class::Floating);
-            return ok ? Internal.Float : 0.0;
+            return ok ? Internal.Float : (Internal.String ? atof(Internal.String->c_str()) : 0);
         }
 
         long ToInt() const { bool b; return ToInt(b); }
         long ToInt(bool& ok) const {
             ok = (Type == Class::Integral);
-            return ok ? Internal.Int : 0;
+            return ok ? Internal.Int : (Internal.String ? atoi(Internal.String->c_str()) : 0);
         }
 
         bool ToBool() const { bool b; return ToBool(b); }
         bool ToBool(bool& ok) const {
             ok = (Type == Class::Boolean);
-            return ok ? Internal.Bool : false;
+            if(ok) return Internal.Bool;
+            ok = (Type == Class::Integral);
+            if (ok) return Internal.Int != 0;
+            if (Type == Class::String && Internal.String) {
+                if ((*Internal.String) == "true") {
+                    ok = true;
+                    return true;
+                }
+                if ((*Internal.String) == "false") {
+                    ok = true;
+                    return false;
+                }
+            }            	
+            return false;
         }
 
         JSONWrapper<map<string, JSON>> ObjectRange() {
@@ -348,7 +363,7 @@ namespace json {
                 bool skip = true;
                 for (auto& p : *Internal.Map) {
                     if (!skip) s += ",\n";
-                    s += (pad + "\"" + p.first + "\" : " + p.second.dump(depth + 1, tab));
+                    s += (pad + "\"" + json_escape(p.first) + "\" : " + p.second.dump(depth + 1, tab));
                     skip = false;
                 }
                 s += ("\n" + pad.erase(0, 2) + "}");
@@ -420,7 +435,7 @@ namespace json {
         Class Type = Class::Null;
     };
 
-    JSON Array() {
+    inline JSON Array() {
         return std::move(JSON::Make(JSON::Class::Array));
     }
 
@@ -431,23 +446,23 @@ namespace json {
         return std::move(arr);
     }
 
-    JSON Object() {
+    inline JSON Object() {
         return std::move(JSON::Make(JSON::Class::Object));
     }
 
-    std::ostream& operator<<(std::ostream& os, const JSON& json) {
+    inline std::ostream& operator<<(std::ostream& os, const JSON& json) {
         os << json.dump();
         return os;
     }
 
     namespace {
-        JSON parse_next(const string&, size_t&);
+        inline JSON parse_next(const string&, size_t&);
 
-        void consume_ws(const string& str, size_t& offset) {
+        inline void consume_ws(const string& str, size_t& offset) {
             while (isspace(str[offset])) ++offset;
         }
 
-        JSON parse_object(const string& str, size_t& offset) {
+        inline JSON parse_object(const string& str, size_t& offset) {
             JSON Object = JSON::Make(JSON::Class::Object);
 
             ++offset;
@@ -483,7 +498,7 @@ namespace json {
             return std::move(Object);
         }
 
-        JSON parse_array(const string& str, size_t& offset) {
+        inline JSON parse_array(const string& str, size_t& offset) {
             JSON Array = JSON::Make(JSON::Class::Array);
             unsigned index = 0;
 
@@ -512,7 +527,7 @@ namespace json {
             return std::move(Array);
         }
 
-        JSON parse_string(const string& str, size_t& offset) {
+        inline JSON parse_string(const string& str, size_t& offset) {
             JSON String;
             string val;
             for (char c = str[++offset]; c != '\"'; c = str[++offset]) {
@@ -550,7 +565,7 @@ namespace json {
             return std::move(String);
         }
 
-        JSON parse_number(const string& str, size_t& offset) {
+        inline JSON parse_number(const string& str, size_t& offset) {
             JSON Number;
             string val, exp_str;
             char c;
@@ -600,7 +615,7 @@ namespace json {
             return std::move(Number);
         }
 
-        JSON parse_bool(const string& str, size_t& offset) {
+        inline JSON parse_bool(const string& str, size_t& offset) {
             JSON Bool;
             if (str.substr(offset, 4) == "true")
                 Bool = true;
@@ -614,7 +629,7 @@ namespace json {
             return std::move(Bool);
         }
 
-        JSON parse_null(const string& str, size_t& offset) {
+        inline JSON parse_null(const string& str, size_t& offset) {
             JSON Null;
             if (str.substr(offset, 4) != "null") {
                 std::cerr << "ERROR: Null: Expected 'null', found '" << str.substr(offset, 4) << "'\n";
@@ -624,7 +639,7 @@ namespace json {
             return std::move(Null);
         }
 
-        JSON parse_next(const string& str, size_t& offset) {
+        inline JSON parse_next(const string& str, size_t& offset) {
             char value;
             consume_ws(str, offset);
             value = str[offset];
@@ -643,7 +658,7 @@ namespace json {
         }
     }
 
-    JSON JSON::Load(const string& str) {
+    inline JSON JSON::Load(const string& str) {
         size_t offset = 0;
         return std::move(parse_next(str, offset));
     }
